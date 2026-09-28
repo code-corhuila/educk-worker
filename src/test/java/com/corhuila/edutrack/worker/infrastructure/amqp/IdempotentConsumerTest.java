@@ -54,6 +54,7 @@ class IdempotentConsumerTest {
         consumer.consumeGradeEvent(message, channel, 1L);
 
         verify(delegate).onGradeCreated("payload");
+        verify(valueOperations).set(eq("event:dedup:event-123"), eq("COMPLETED"), any(Duration.class));
         verify(channel).basicAck(1L, false);
     }
 
@@ -88,6 +89,7 @@ class IdempotentConsumerTest {
         consumer.consumeGradeEvent(message, channel, 1L);
 
         verify(delegate).onGradeCreated("payload");
+        verify(redisTemplate).delete("event:dedup:event-123");
         verify(channel).basicNack(1L, false, false);
     }
 }

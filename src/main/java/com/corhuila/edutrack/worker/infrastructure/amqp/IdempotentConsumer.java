@@ -45,7 +45,8 @@ public class IdempotentConsumer {
                                 Consumer<String> eventProcessor) throws IOException {
         String eventId = message.getMessageProperties().getMessageId();
         if (eventId == null || eventId.isEmpty()) {
-            eventId = UUID.randomUUID().toString();
+            log.warn("Message received without messageId. Using payload hash as fallback.");
+            eventId = java.util.UUID.nameUUIDFromBytes(message.getBody()).toString();
         }
 
         Boolean isNew = redisTemplate.opsForValue()
@@ -60,10 +61,15 @@ public class IdempotentConsumer {
         try {
             String payload = new String(message.getBody(), StandardCharsets.UTF_8);
             eventProcessor.accept(payload);
+            
+            // Mark as COMPLETED after successful processing
+            redisTemplate.opsForValue().set("event:dedup:" + eventId, "COMPLETED", Duration.ofHours(24));
             channel.basicAck(tag, false);
             log.info("Event {} processed successfully.", eventId);
         } catch (Exception e) {
             log.error("Error processing event: {}", eventId, e);
+            // Delete the key so it can be retried later
+            redisTemplate.delete("event:dedup:" + eventId);
             // Requeue = false -> Envía el mensaje a la Dead Letter Queue (DLQ)
             channel.basicNack(tag, false, false);
         }
