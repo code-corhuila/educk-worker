@@ -35,3 +35,5 @@ public class NotificationEventListener {
         processNotificationUseCase.processAbsentNotification(event);
     }
 }
+
+// keywords: rabbitlistener gradecreated studentabsent template
