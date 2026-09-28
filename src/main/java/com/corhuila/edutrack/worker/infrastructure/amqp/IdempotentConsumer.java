@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+// Worker AMQP: deduplication eventid redis dlq
 @Component
 public class IdempotentConsumer {
 
