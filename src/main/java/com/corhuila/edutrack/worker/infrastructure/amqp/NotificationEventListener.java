@@ -19,6 +19,7 @@ public class NotificationEventListener {
         this.processNotificationUseCase = processNotificationUseCase;
     }
 
+    @RabbitListener(queues = "grades.queue")
     public void onGradeCreated(String messagePayload) {
         log.info("Received AMQP message for GradeCreated: {}", messagePayload);
         GradeCreatedEvent event = new GradeCreatedEvent();
@@ -27,6 +28,7 @@ public class NotificationEventListener {
         processNotificationUseCase.processGradeNotification(event);
     }
 
+    @RabbitListener(queues = "attendance.queue")
     public void onStudentAbsent(String messagePayload) {
         log.info("Received AMQP message for StudentAbsent: {}", messagePayload);
         StudentAbsentEvent event = new StudentAbsentEvent();

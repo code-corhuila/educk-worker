@@ -39,12 +39,14 @@ public class NotificationWorkerService implements ProcessNotificationUseCase {
             studentId = UUID.randomUUID();
         }
 
+        String message = buildTemplate("Estimado Acudiente, el estudiante tiene una nueva calificación: %s", event.getPayload().getGrade().toString());
+
         Notification notification = new Notification(
             UUID.randomUUID(),
             studentId,
             "ACADEMIC",
             "Nueva Calificación Registrada",
-            "Se ha publicado una nueva calificación: " + event.getPayload().getGrade(),
+            message,
             "IN_APP",
             "DELIVERED",
             LocalDateTime.now()
@@ -66,12 +68,14 @@ public class NotificationWorkerService implements ProcessNotificationUseCase {
             studentId = UUID.randomUUID();
         }
 
+        String message = buildTemplate("Estimado Acudiente, el estudiante %s presenta una inasistencia el día de hoy.", event.getPayload().getStudentId());
+
         Notification notification = new Notification(
             UUID.randomUUID(),
             studentId,
             "ATTENDANCE",
             "Alerta de Inasistencia Registrada",
-            "Se ha registrado una inasistencia para la fecha actual.",
+            message,
             "PUSH",
             "DELIVERED",
             LocalDateTime.now()
@@ -79,5 +83,9 @@ public class NotificationWorkerService implements ProcessNotificationUseCase {
 
         Notification saved = repositoryPort.save(notification);
         senderPort.dispatch(saved);
+    }
+
+    private String buildTemplate(String template, String... args) {
+        return String.format(template, (Object[]) args);
     }
 }
