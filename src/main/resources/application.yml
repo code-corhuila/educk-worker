@@ -12,20 +12,4 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-    listener:
-      simple:
-        retry:
-          enabled: true
-          max-attempts: 3
-          initial-interval: 1000
-          multiplier: 2.0
-          max-interval: 10000
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+
