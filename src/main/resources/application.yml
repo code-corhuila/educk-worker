@@ -1,15 +1,11 @@
 server:
   port: 8084
-
 spring:
   application:
     name: worker-notifications
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:notifications_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-
+worker:
+  jobs:
+    attendance-timeout:
+      enabled: ${ATTENDANCE_TIMEOUT_ENABLED:false}
+      url: ${ATTENDANCE_TIMEOUT_URL:}
+      delay: ${ATTENDANCE_TIMEOUT_DELAY:300000}

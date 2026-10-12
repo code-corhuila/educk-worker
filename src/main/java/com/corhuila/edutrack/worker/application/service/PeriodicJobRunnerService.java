@@ -1,35 +1,45 @@
 package com.corhuila.edutrack.worker.application.service;
 
+import java.net.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@ConditionalOnProperty(name = "worker.jobs.attendance-timeout.enabled", havingValue = "true")
 public class PeriodicJobRunnerService {
-
     private static final Logger log = LoggerFactory.getLogger(PeriodicJobRunnerService.class);
-
     private final RestTemplate restTemplate;
+    private final URI endpoint;
 
-    @Value("${api.gateway.url:http://localhost:8080}")
-    private String gatewayUrl;
-
-    public PeriodicJobRunnerService(RestTemplate restTemplate) {
+    public PeriodicJobRunnerService(RestTemplate restTemplate,
+            @Value("${worker.jobs.attendance-timeout.url}") String url) {
         this.restTemplate = restTemplate;
+        this.endpoint = URI.create(url);
+        if (endpoint.getHost() == null || endpoint.getUserInfo() != null
+                || !("http".equals(endpoint.getScheme()) || "https".equals(endpoint.getScheme()))) {
+            throw new IllegalArgumentException("An absolute HTTP(S) job URL without credentials is required");
+        }
     }
 
     @Scheduled(fixedDelayString = "${worker.jobs.attendance-timeout.delay:300000}")
     public void executeAttendanceTimeoutJob() {
-        log.info("[WORKER-JOB] Iniciando proceso de expiración de notas y alertas diarias de asistencia por HTTP Polling...");
         try {
-            // Ejemplo de llamada a la API por HTTP para delegar la lógica de negocio al dominio correspondiente.
-            // restTemplate.postForObject(gatewayUrl + "/api/v1/attendance/jobs/timeout", null, String.class);
-            log.info("[WORKER-JOB] Llamada a APIs finalizada correctamente.");
-        } catch (Exception e) {
-            log.error("[WORKER-JOB] Error ejecutando el Job: {}", e.getMessage());
+            var response = restTemplate.postForEntity(endpoint, null, Void.class);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                log.warn("Attendance job was not acknowledged; retrying on the next schedule");
+                return;
+            }
+            log.info("Attendance job acknowledged by the domain API");
+        } catch (RestClientException error) {
+            // Do not log remote response bodies, credentials or request URLs.
+            log.warn("Attendance job unavailable; retrying on the next schedule ({})",
+                    error.getClass().getSimpleName());
         }
     }
 }

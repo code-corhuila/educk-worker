@@ -12,7 +12,8 @@ public class WorkerApplication {
     }
 
     @org.springframework.context.annotation.Bean
-    public org.springframework.web.client.RestTemplate restTemplate() {
-        return new org.springframework.web.client.RestTemplate();
+    public org.springframework.web.client.RestTemplate restTemplate(org.springframework.boot.web.client.RestTemplateBuilder builder) {
+        return builder.setConnectTimeout(java.time.Duration.ofSeconds(2))
+                .setReadTimeout(java.time.Duration.ofSeconds(10)).build();
     }
 }
